@@ -146,9 +146,9 @@
 /* Miscellaneous configurable options */
 #define CONFIG_SYS_LONGHELP
 #define CONFIG_SYS_HUSH_PARSER
-#define CONFIG_SYS_PROMPT	       "U-Boot >"
+#define CONFIG_SYS_PROMPT	       "PDi(R) AR6MXQ U-Boot > "
 #define CONFIG_AUTO_COMPLETE
-#define CONFIG_SYS_CBSIZE		256
+#define CONFIG_SYS_CBSIZE		1024 /* Console I/O Buffer Size */
 
 /* Print Buffer Size */
 #define CONFIG_SYS_PBSIZE (CONFIG_SYS_CBSIZE + sizeof(CONFIG_SYS_PROMPT) + 16)
