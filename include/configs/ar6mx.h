@@ -66,6 +66,8 @@
 #define CONFIG_GENERIC_MMC
 #define CONFIG_BOUNCE_BUFFER
 #define CONFIG_CMD_EXT2
+#define CONFIG_CMD_EXT4
+#define CONFIG_CMD_FS_GENERIC
 #define CONFIG_CMD_FAT
 #define CONFIG_DOS_PARTITION
 
@@ -220,7 +222,6 @@
 #ifndef CONFIG_SYS_DCACHE_OFF
 #define CONFIG_CMD_CACHE
 #endif
-
 
 #if defined(CONFIG_ANDROID_SUPPORT)
 #include "ar6mxandroid_common.h"

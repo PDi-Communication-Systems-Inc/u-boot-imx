@@ -38,7 +38,16 @@
 
 
 #define CONFIG_CMD_BOOTI
-//#define CONFIG_ANDROID_RECOVERY
+
+/* Display logo, could be customized for distributors */
+#define CONFIG_CMD_BMP
+
+/* Enable recovery, BCM had it disabled for some reason */
+#define CONFIG_ANDROID_RECOVERY
+
+/* May need to get a guid from time to time */
+#define CONFIG_CMD_UUID
+
 /* which mmc bus is your main storage ? */
 #define CONFIG_ANDROID_MAIN_MMC_BUS 3
 #define CONFIG_ANDROID_BOOT_PARTITION_MMC 1
