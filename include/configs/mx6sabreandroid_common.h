@@ -38,6 +38,7 @@
 
 
 #define CONFIG_CMD_BOOTI
+#define CONFIG_CMD_BMP
 #define CONFIG_ANDROID_RECOVERY
 /* which mmc bus is your main storage ? */
 #define CONFIG_ANDROID_MAIN_MMC_BUS 2
