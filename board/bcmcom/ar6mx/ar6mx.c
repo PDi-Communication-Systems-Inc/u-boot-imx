@@ -30,6 +30,7 @@
 #include <miiphy.h>
 #include <netdev.h>
 
+
 #define MACH_TYPE_AR6MX	4517
 #define USB_OTG_PWR IMX_GPIO_NR(1, 7)
 #define USB_V1_POWER IMX_GPIO_NR(5, 13)
@@ -615,6 +616,7 @@ void board_fastboot_setup(void)
 	}
 
 }
+#endif
 
 #ifdef CONFIG_ANDROID_RECOVERY
 
@@ -625,27 +627,75 @@ iomux_v3_cfg_t const recovery_key_pads[] = {
 
 int check_recovery_cmd_file(void)
 {
-    int button_pressed = 0;
-    int recovery_mode = 0;
+          int button_pressed = 0;
+          int recovery_mode = 0;
 
-    recovery_mode = recovery_check_and_clean_flag();
+          u32 reg;
 
-    /* Check Recovery Combo Button press or not. */
-	imx_iomux_v3_setup_multiple_pads(recovery_key_pads,
-			ARRAY_SIZE(recovery_key_pads));
+          recovery_mode =  recovery_check_and_clean_flag();
+          iomux_v3_cfg_t pad1 = MX6_PAD_NANDF_D1__GPIO2_IO01;
+          iomux_v3_cfg_t pad2 = MX6_PAD_NANDF_D2__GPIO2_IO02;
+          iomux_v3_cfg_t pad3 = MX6_PAD_NANDF_D3__GPIO2_IO03;
 
-    gpio_direction_input(GPIO_VOL_DN_KEY);
+          imx_iomux_v3_setup_pad(pad1);  // Navigation Arrow Up
+          imx_iomux_v3_setup_pad(pad2);  // Navigation Arrow Down
+          imx_iomux_v3_setup_pad(pad3);  // Navigation Arrow Left
+          reg = readl(GPIO2_BASE_ADDR + GPIO_GDIR);
+          reg &= ~(1<<1 | 1<<2 | 1<<3);
+          writel(reg, GPIO2_BASE_ADDR + GPIO_GDIR);
+          reg = readl(GPIO2_BASE_ADDR + GPIO_PSR);
 
-    if (gpio_get_value(GPIO_VOL_DN_KEY) == 0) { /* VOL_DN key is low assert */
-		button_pressed = 1;
-		printf("Recovery key pressed\n");
-    }
+          if(!(reg & (1<<1 | 1<<2 | 1<<3))) {
+                button_pressed = 1;
+                printf("Recovery key pressed\n");
+          }
 
-    return recovery_mode || button_pressed;
+
+          return recovery_mode || button_pressed;
 }
+
+#endif
+
+#ifdef CONFIG_FASTBOOT
+
+int check_fastboot_by_arrow_left_and_down(void)
+{
+          int button_pressed = 0;
+
+          u32 reg;
+
+          iomux_v3_cfg_t pad1 = MX6_PAD_NANDF_D1__GPIO2_IO01;
+          iomux_v3_cfg_t pad2 = MX6_PAD_NANDF_D2__GPIO2_IO02;
+          iomux_v3_cfg_t pad3 = MX6_PAD_NANDF_D3__GPIO2_IO03;
+
+          /*mxc_iomux_v3_setup_pad(pad1);  // Navigation Arrow Up
+          mxc_iomux_v3_setup_pad(pad2);  // Navigation Arrow Down
+          mxc_iomux_v3_setup_pad(pad3);  // Navigation Arrow Left */
+
+          imx_iomux_v3_setup_pad(pad1);  // Navigation Arrow Up
+          imx_iomux_v3_setup_pad(pad2);  // Navigation Arrow Down
+          imx_iomux_v3_setup_pad(pad3);  // Navigation Arrow Left
+          reg = readl(GPIO2_BASE_ADDR + GPIO_GDIR);
+          reg &= ~(1<<1 | 1<<2 | 1<<3);
+          writel(reg, GPIO2_BASE_ADDR + GPIO_GDIR);
+
+          // Select fastboot if Arrows Left and Up are selected and Arrow Down is not selected
+          reg = (readl(GPIO2_BASE_ADDR + GPIO_PSR) ^ (1<<2));
+
+          if(!(reg & (1<<1 | 1<<2 | 1<<3))) {
+                button_pressed = 1;
+                printf("fastboot key pressed\n");
+          }
+
+
+          return button_pressed;
+}
+
+#endif
 
 void board_recovery_setup(void)
 {
+
 	int bootdev = get_boot_device();
 
 	switch (bootdev) {
@@ -654,7 +704,7 @@ void board_recovery_setup(void)
 		if (!getenv("bootcmd_android_recovery"))
 			setenv("bootcmd_android_recovery",
 				"booti sata recovery");
-		break;
+		break; 
 #endif /*CONFIG_FASTBOOT_STORAGE_SATA*/
 #if defined(CONFIG_FASTBOOT_STORAGE_MMC)
 	case SD2_BOOT:
@@ -672,22 +722,25 @@ void board_recovery_setup(void)
 	case MMC4_BOOT:
 		if (!getenv("bootcmd_android_recovery"))
 			setenv("bootcmd_android_recovery",
-				"booti mmc2 recovery");
-		break;
+				"booti mmc1 recovery");
+		break;  
 #endif /*CONFIG_FASTBOOT_STORAGE_MMC*/
 	default:
 		printf("Unsupported bootup device for recovery: dev: %d\n",
 			bootdev);
 		return;
-	}
+	} 
+
 
 	printf("setup env for recovery..\n");
-	setenv("bootcmd", "run bootcmd_android_recovery");
+	setenv("bootcmd", "run bootargs_hdmi;run bootcmd_android_recovery");
+
+
 }
 
-#endif /*CONFIG_ANDROID_RECOVERY*/
+//#endif /*CONFIG_ANDROID_RECOVERY*/
 
-#endif /*CONFIG_FASTBOOT*/
+//#endif /*CONFIG_FASTBOOT*/
 
 #ifdef CONFIG_IMX_UDC
 iomux_v3_cfg_t const otg_udc_pads[] = {
