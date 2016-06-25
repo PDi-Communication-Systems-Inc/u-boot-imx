@@ -58,6 +58,9 @@
 #undef CONFIG_EXTRA_ENV_SETTINGS
 #undef CONFIG_BOOTCOMMAND
 
+/* Note that code in board/bcmcom/ar6mx/ar6mx.c determines
+   whether bootargs_ldb or bootargs_hdmi is used
+*/
 #define CONFIG_EXTRA_ENV_SETTINGS					\
 	"splashpos=m,m\0"	  \
 	"fdt_high=0xffffffff\0"	  \
