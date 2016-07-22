@@ -366,15 +366,15 @@ static void enable_lvds(struct display_info_t const *dev)
 static struct display_info_t const displays[] = {{
 	.bus	= -1,
 	.addr	= 0,
-	.pixfmt	= IPU_PIX_FMT_RGB666,
+	.pixfmt	= IPU_PIX_FMT_RGB24,
 	.detect	= NULL,
 	.enable	= enable_lvds,
 	.mode	= {
-		.name           = "Hannstar-XGA",
+		.name           = "AU0_G185XW01",
 		.refresh        = 60,
-		.xres           = 1024,
+		.xres           = 1366,
 		.yres           = 768,
-		.pixclock       = 15385,
+		.pixclock       = 12844,
 		.left_margin    = 220,
 		.right_margin   = 40,
 		.upper_margin   = 21,
@@ -733,7 +733,14 @@ void board_recovery_setup(void)
 
 
 	printf("setup env for recovery..\n");
-	setenv("bootcmd", "run bootargs_hdmi;run bootcmd_android_recovery");
+
+        /* PDi mrobbeloth, need to account for those lvds displays */
+        if(detect_hdmi(&displays[1])) {
+	   setenv("bootcmd", "run bootargs_hdmi;run bootcmd_android_recovery");
+        } 
+        else {
+           setenv("bootcmd", "run bootargs_ldb;run bootcmd_android_recovery");
+        } 
 
 
 }
