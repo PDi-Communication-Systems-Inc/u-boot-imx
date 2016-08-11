@@ -93,14 +93,14 @@ iomux_v3_cfg_t const usdhc4_pads[] = {
 };
 
 static iomux_v3_cfg_t const gpio_pads[] = {
-	MX6_PAD_NANDF_D0__GPIO2_IO00 | MUX_PAD_CTRL(NO_PAD_CTRL),
-	MX6_PAD_NANDF_D1__GPIO2_IO01 | MUX_PAD_CTRL(NO_PAD_CTRL),
-	MX6_PAD_NANDF_D2__GPIO2_IO02 | MUX_PAD_CTRL(NO_PAD_CTRL),
-	MX6_PAD_NANDF_D3__GPIO2_IO03 | MUX_PAD_CTRL(NO_PAD_CTRL),
-	MX6_PAD_NANDF_D4__GPIO2_IO04 | MUX_PAD_CTRL(NO_PAD_CTRL),
-	MX6_PAD_NANDF_D5__GPIO2_IO05 | MUX_PAD_CTRL(NO_PAD_CTRL),
-	MX6_PAD_NANDF_D6__GPIO2_IO06 | MUX_PAD_CTRL(NO_PAD_CTRL),
-	MX6_PAD_NANDF_D7__GPIO2_IO07 | MUX_PAD_CTRL(NO_PAD_CTRL),
+	MX6_PAD_NANDF_D0__GPIO2_IO00 | MUX_PAD_CTRL(PAD_CTL_PUS_100K_UP),
+	MX6_PAD_NANDF_D1__GPIO2_IO01 | MUX_PAD_CTRL(PAD_CTL_PUS_100K_UP),
+	MX6_PAD_NANDF_D2__GPIO2_IO02 | MUX_PAD_CTRL(PAD_CTL_PUS_100K_UP),
+	MX6_PAD_NANDF_D3__GPIO2_IO03 | MUX_PAD_CTRL(PAD_CTL_PUS_100K_UP),
+	MX6_PAD_NANDF_D4__GPIO2_IO04 | MUX_PAD_CTRL(PAD_CTL_PUS_100K_UP),
+	MX6_PAD_NANDF_D5__GPIO2_IO05 | MUX_PAD_CTRL(PAD_CTL_PUS_100K_UP),
+	MX6_PAD_NANDF_D6__GPIO2_IO06 | MUX_PAD_CTRL(PAD_CTL_PUS_100K_UP),
+	MX6_PAD_NANDF_D7__GPIO2_IO07 | MUX_PAD_CTRL(PAD_CTL_PUS_100K_UP),
 };
 
 
@@ -633,13 +633,7 @@ int check_recovery_cmd_file(void)
           u32 reg;
 
           recovery_mode =  recovery_check_and_clean_flag();
-          iomux_v3_cfg_t pad1 = MX6_PAD_NANDF_D1__GPIO2_IO01;
-          iomux_v3_cfg_t pad2 = MX6_PAD_NANDF_D2__GPIO2_IO02;
-          iomux_v3_cfg_t pad3 = MX6_PAD_NANDF_D3__GPIO2_IO03;
 
-          imx_iomux_v3_setup_pad(pad1);  // Navigation Arrow Up
-          imx_iomux_v3_setup_pad(pad2);  // Navigation Arrow Down
-          imx_iomux_v3_setup_pad(pad3);  // Navigation Arrow Left
           reg = readl(GPIO2_BASE_ADDR + GPIO_GDIR);
           reg &= ~(1<<1 | 1<<2 | 1<<3);
           writel(reg, GPIO2_BASE_ADDR + GPIO_GDIR);
