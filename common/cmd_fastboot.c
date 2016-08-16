@@ -1818,6 +1818,8 @@ int do_booti(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 		}
 
 		setenv("bootargs", commandline);
+#else
+	printf("do_booti(): CONFIG_SERIAL_TAG not included in build\n");
 #endif
 	}
 

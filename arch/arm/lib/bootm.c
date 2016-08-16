@@ -156,7 +156,10 @@ static void setup_serial_tag(struct tag **tmp)
 	struct tag *params = *tmp;
 	struct tag_serialnr serialnr;
 
+        printf("setup_serial_tag(): calling get_board_serial\n");
 	get_board_serial(&serialnr);
+        printf("setup_serial_tag(): serial is %u%u\n", serialnr.high,
+               serialnr.low);
 	params->hdr.tag = ATAG_SERIAL;
 	params->hdr.size = tag_size (tag_serialnr);
 	params->u.serialnr.low = serialnr.low;

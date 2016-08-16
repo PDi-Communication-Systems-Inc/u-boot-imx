@@ -48,6 +48,7 @@ void get_board_serial(struct tag_serialnr *serialnr);
  #define BOOTM_ENABLE_SERIAL_TAG	0
 static inline void get_board_serial(struct tag_serialnr *serialnr)
 {
+   printf("get_board_serial(): the empty routine\n");
 }
 #endif
 
