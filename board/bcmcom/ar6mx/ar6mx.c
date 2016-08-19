@@ -30,7 +30,6 @@
 #include <miiphy.h>
 #include <netdev.h>
 
-
 #define MACH_TYPE_AR6MX	4517
 #define USB_OTG_PWR IMX_GPIO_NR(1, 7)
 #define USB_V1_POWER IMX_GPIO_NR(5, 13)
@@ -57,6 +56,20 @@ DECLARE_GLOBAL_DATA_PTR;
 	PAD_CTL_ODE | PAD_CTL_SRE_FAST)
 
 #define USDHC3_CD_GPIO IMX_GPIO_NR(7, 0)
+
+/* Declare version gpio pins */
+iomux_v3_cfg_t board_ver_pads[] = {
+  MX6_PAD_DISP0_DAT4__GPIO4_IO25,
+  MX6_PAD_DISP0_DAT5__GPIO4_IO26,
+  MX6_PAD_DISP0_DAT6__GPIO4_IO27,
+  MX6_PAD_DISP0_DAT7__GPIO4_IO28,
+};
+
+// PDi mrobbeloth Board version GPIO
+#define AR6MX_VER_B0 IMX_GPIO_NR(4, 25)
+#define AR6MX_VER_B1 IMX_GPIO_NR(4, 26)
+#define AR6MX_VER_B2 IMX_GPIO_NR(4, 27)
+#define AR6MX_VER_B3 IMX_GPIO_NR(4, 28)
 
 iomux_v3_cfg_t const uart1_pads[] = {
 	MX6_PAD_SD3_DAT7__UART1_TX_DATA | MUX_PAD_CTRL(UART_PAD_CTRL),
@@ -93,16 +106,57 @@ iomux_v3_cfg_t const usdhc4_pads[] = {
 };
 
 static iomux_v3_cfg_t const gpio_pads[] = {
-	MX6_PAD_NANDF_D0__GPIO2_IO00 | MUX_PAD_CTRL(NO_PAD_CTRL),
-	MX6_PAD_NANDF_D1__GPIO2_IO01 | MUX_PAD_CTRL(NO_PAD_CTRL),
-	MX6_PAD_NANDF_D2__GPIO2_IO02 | MUX_PAD_CTRL(NO_PAD_CTRL),
-	MX6_PAD_NANDF_D3__GPIO2_IO03 | MUX_PAD_CTRL(NO_PAD_CTRL),
+	MX6_PAD_NANDF_D0__GPIO2_IO00 | MUX_PAD_CTRL(PAD_CTL_PUS_100K_UP),
+	MX6_PAD_NANDF_D1__GPIO2_IO01 | MUX_PAD_CTRL(PAD_CTL_PUS_100K_UP),
+	MX6_PAD_NANDF_D2__GPIO2_IO02 | MUX_PAD_CTRL(PAD_CTL_PUS_100K_UP),
+	MX6_PAD_NANDF_D3__GPIO2_IO03 | MUX_PAD_CTRL(PAD_CTL_PUS_100K_UP),
 	MX6_PAD_NANDF_D4__GPIO2_IO04 | MUX_PAD_CTRL(NO_PAD_CTRL),
 	MX6_PAD_NANDF_D5__GPIO2_IO05 | MUX_PAD_CTRL(NO_PAD_CTRL),
 	MX6_PAD_NANDF_D6__GPIO2_IO06 | MUX_PAD_CTRL(NO_PAD_CTRL),
 	MX6_PAD_NANDF_D7__GPIO2_IO07 | MUX_PAD_CTRL(NO_PAD_CTRL),
 };
 
+int ar6mx_board_version(void) {
+  int b3 = 0;
+  int b2 = 0;
+  int b1 = 0;
+  int b0 = 0;
+  int ret = 0;
+
+  /* read board version registers connected to gpio pins and
+     DISP0_DAT4 on i.MX6Q/DL - DISP; CSI */
+  b3 = gpio_get_value(AR6MX_VER_B3);
+  b2 = gpio_get_value(AR6MX_VER_B2);
+  b1 = gpio_get_value(AR6MX_VER_B1);
+  b0 = gpio_get_value(AR6MX_VER_B0);
+  ret |= (b3 << 3);
+  ret |= (b2 << 2);
+  ret |= (b1 << 1);
+  ret |= (b0 << 0);
+
+  /* print board version in serial console */
+  if (ret == 15) {
+     printf("Board Version: %x%x%x%x or 0x%x (TAB Solo)\n", 
+            b3, b2, b1, b0, ret);
+  }
+  else if (ret == 1) {
+     printf("Board Version: %x%x%x%x or 0x%x (TAB2 Quad)\n", 
+            b3, b2, b1, b0, ret);
+  }
+  else {
+     printf("Board Version: %x%x%x%x or 0x%x (Unknown)\n", 
+            b3, b2, b1, b0, ret);
+  }
+  
+  /* update bootargs with board version, could be done in 
+     kernel board file, but okay here too */
+  char* cmdline = getenv("bootargs");
+  char* cmdline_a = (char *) malloc(strlen(cmdline) + 24);
+  sprintf(cmdline_a, "%s board_version=%x%x%x%x ", cmdline, b3, b2, b1, b0);
+  setenv("bootargs", cmdline_a);
+  free(cmdline_a);
+  return ret;
+}
 
 int dram_init(void)
 {
@@ -316,6 +370,11 @@ static void setup_gpios(void)
 	};
 	gpio_direction_output(IMX_GPIO_NR(2, 6), 0);
 	gpio_direction_output(IMX_GPIO_NR(2, 7), 0);
+
+        imx_iomux_v3_setup_multiple_pads(
+           board_ver_pads,
+           ARRAY_SIZE(board_ver_pads));
+
 };
 
 #if defined(CONFIG_VIDEO_IPUV3)
@@ -524,6 +583,11 @@ int overwrite_console(void)
 
 int board_init(void)
 {
+
+        imx_iomux_v3_setup_multiple_pads(
+           board_ver_pads,
+           ARRAY_SIZE(board_ver_pads));
+
 	/* address of boot parameters */
 	gd->bd->bi_boot_params = PHYS_SDRAM + 0x100;
 
@@ -553,6 +617,7 @@ int board_late_init(void)
 	add_board_boot_modes(board_boot_modes);
 #endif
 
+	ar6mx_board_version();
 	return 0;
 }
 
@@ -665,17 +730,6 @@ int check_fastboot_by_arrow_left_and_down(void)
 
           u32 reg;
 
-          iomux_v3_cfg_t pad1 = MX6_PAD_NANDF_D1__GPIO2_IO01;
-          iomux_v3_cfg_t pad2 = MX6_PAD_NANDF_D2__GPIO2_IO02;
-          iomux_v3_cfg_t pad3 = MX6_PAD_NANDF_D3__GPIO2_IO03;
-
-          /*mxc_iomux_v3_setup_pad(pad1);  // Navigation Arrow Up
-          mxc_iomux_v3_setup_pad(pad2);  // Navigation Arrow Down
-          mxc_iomux_v3_setup_pad(pad3);  // Navigation Arrow Left */
-
-          imx_iomux_v3_setup_pad(pad1);  // Navigation Arrow Up
-          imx_iomux_v3_setup_pad(pad2);  // Navigation Arrow Down
-          imx_iomux_v3_setup_pad(pad3);  // Navigation Arrow Left
           reg = readl(GPIO2_BASE_ADDR + GPIO_GDIR);
           reg &= ~(1<<1 | 1<<2 | 1<<3);
           writel(reg, GPIO2_BASE_ADDR + GPIO_GDIR);
