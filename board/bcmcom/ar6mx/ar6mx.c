@@ -65,11 +65,32 @@ iomux_v3_cfg_t board_ver_pads[] = {
   MX6_PAD_DISP0_DAT7__GPIO4_IO28,
 };
 
+// PDi Transistor-Transistor Logic (TTL) Setup CN5 GPIO Pad
+#define AR6MX_TTL_DI0	IMX_GPIO_NR(2, 0)
+#define AR6MX_TTL_DI1	IMX_GPIO_NR(2, 1)
+#define AR6MX_TTL_DI2	IMX_GPIO_NR(2, 2)
+#define AR6MX_TTL_DI3	IMX_GPIO_NR(2, 3)
+#define AR6MX_TTL_DI4	IMX_GPIO_NR(2, 4)
+#define AR6MX_TTL_DI5	IMX_GPIO_NR(2, 5)
+#define AR6MX_TTL_DO0	IMX_GPIO_NR(2, 6)
+#define AR6MX_TTL_DO1	IMX_GPIO_NR(2, 7)
+
+// PDi Human readable Names for TTL GPIO Setup
+#define AR6MX_TV_POWER_REQ            AR6MX_TTL_DI0
+#define AR6MX_TV_ARROW_UP             AR6MX_TTL_DI1
+#define AR6MX_AIO_VOL_UP              AR6MX_TTL_DI1
+#define AR6MX_TV_ARROW_DOWN           AR6MX_TTL_DI2
+#define AR6MX_AIO_VOL_DOWN            AR6MX_TTL_DI2
+#define AR6MX_TV_ARROW_LEFT           AR6MX_TTL_DI3 // Arrow Left Not Available on P19 AIO Front Panel
+#define AR6MX_TV_OR_AIO               AR6MX_TTL_DI5 // float high for TV/Tab, pull low for all-in-one -JTS
+#define AR6MX_ANDROID_PWRSTATE        AR6MX_TTL_DO0
+#define AR6MX_INTERNAL_SPK_ENABLE     AR6MX_TTL_DO1
+
 // PDi mrobbeloth Board version GPIO
-#define AR6MX_VER_B0 IMX_GPIO_NR(4, 25)
-#define AR6MX_VER_B1 IMX_GPIO_NR(4, 26)
-#define AR6MX_VER_B2 IMX_GPIO_NR(4, 27)
-#define AR6MX_VER_B3 IMX_GPIO_NR(4, 28)
+#define AR6MX_VER_B0 	IMX_GPIO_NR(4, 25)
+#define AR6MX_VER_B1 	IMX_GPIO_NR(4, 26)
+#define AR6MX_VER_B2 	IMX_GPIO_NR(4, 27)
+#define AR6MX_VER_B3 	IMX_GPIO_NR(4, 28)
 
 iomux_v3_cfg_t const uart1_pads[] = {
 	MX6_PAD_SD3_DAT7__UART1_TX_DATA | MUX_PAD_CTRL(UART_PAD_CTRL),
@@ -116,6 +137,38 @@ static iomux_v3_cfg_t const gpio_pads[] = {
 	MX6_PAD_NANDF_D7__GPIO2_IO07 | MUX_PAD_CTRL(NO_PAD_CTRL),
 };
 
+/* string replace code from user chantra on: 
+   http://coding.debuntu.org/c-implementing-str_replace-replace-all-occurrences-substring */
+char *
+str_replace ( const char *string, const char *substr, const char *replacement ){
+  char *tok = NULL;
+  char *newstr = NULL;
+  char *oldstr = NULL;
+  char *head = NULL;
+ 
+  /* if either substr or replacement is NULL, duplicate string a let caller handle it */
+  if ( substr == NULL || replacement == NULL ) return strdup (string);
+  newstr = strdup (string);
+  head = newstr;
+  while ( (tok = strstr ( head, substr ))){
+    oldstr = newstr;
+    newstr = malloc ( strlen ( oldstr ) - strlen ( substr ) + strlen ( replacement ) + 1 );
+    /*failed to alloc mem, free old string and return NULL */
+    if ( newstr == NULL ){
+      free (oldstr);
+      return NULL;
+    }
+    memcpy ( newstr, oldstr, tok - oldstr );
+    memcpy ( newstr + (tok - oldstr), replacement, strlen ( replacement ) );
+    memcpy ( newstr + (tok - oldstr) + strlen( replacement ), tok + strlen ( substr ), strlen ( oldstr ) - strlen ( substr ) - ( tok - oldstr ) );
+    memset ( newstr + strlen ( oldstr ) - strlen ( substr ) + strlen ( replacement ) , 0, 1 );
+    /* move back head right after the last replacement */
+    head = newstr + (tok - oldstr) + strlen( replacement );
+    free (oldstr);
+  }
+  return newstr;
+}
+
 int ar6mx_board_version(void) {
   int b3 = 0;
   int b2 = 0;
@@ -156,6 +209,42 @@ int ar6mx_board_version(void) {
   setenv("bootargs", cmdline_a);
   free(cmdline_a);
   return ret;
+}
+
+int ar6mx_tv_or_aio_reporting(void) {
+
+   /* Report the model class (type) 
+      P14TAB, Standard Module, SW Module for TV (high input) 
+      AIO (P19A), M-Series TV, or Universal Module for AIO (low input) */
+   int model_type = -1;
+   printf("PDi Model Class: ");
+   if (gpio_get_value(AR6MX_TV_OR_AIO)) {
+      printf("TV (TAB)\n");
+      model_type = 1;
+   }
+   else {
+      printf("AIO\n");
+      model_type = 0;
+   }
+
+
+   /* update bootargs with model type  */
+   char* cmdline = getenv("bootargs");
+   char* cmdline_a = (char *) malloc(strlen(cmdline) + 20); 
+   sprintf(cmdline_a, "%s model_type=%s ", cmdline, 
+           (model_type == 0) ? "AIO" : "TV"); 
+   setenv("bootargs", cmdline_a);
+   free(cmdline_a);
+
+   /* Replace RGB24 with RGB18 as needed */
+   if (model_type == 1) {
+      char* updated_bootargs = str_replace(
+          getenv("bootargs_hdmi"), "RGB24", "RGB18");
+      setenv("bootargs_hdmi", updated_bootargs);
+      updated_bootargs = str_replace(
+          getenv("bootargs_dual"), "RGB24", "RGB18");
+      setenv("bootargs_dual", updated_bootargs);
+   }
 }
 
 int dram_init(void)
@@ -618,6 +707,7 @@ int board_late_init(void)
 #endif
 
 	ar6mx_board_version();
+	ar6mx_tv_or_aio_reporting();
 	return 0;
 }
 
