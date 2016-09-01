@@ -30,6 +30,10 @@
 #include <miiphy.h>
 #include <netdev.h>
 
+// Device-tree support headers
+#include <libfdt.h>
+#include <fdt_support.h>
+
 #define MACH_TYPE_AR6MX	4517
 #define USB_OTG_PWR IMX_GPIO_NR(1, 7)
 #define USB_V1_POWER IMX_GPIO_NR(5, 13)
@@ -211,7 +215,7 @@ int ar6mx_board_version(void) {
   return ret;
 }
 
-int ar6mx_tv_or_aio_reporting(void) {
+void ar6mx_tv_or_aio_reporting(void) {
 
    /* Report the model class (type) 
       P14TAB, Standard Module, SW Module for TV (high input) 
@@ -244,7 +248,39 @@ int ar6mx_tv_or_aio_reporting(void) {
       updated_bootargs = str_replace(
           getenv("bootargs_dual"), "RGB24", "RGB18");
       setenv("bootargs_dual", updated_bootargs);
-   }
+
+      /* Update device tree with new information */
+      void *fdt_location = (void *)getenv_hex("fdt_addr", 0);
+      int fdtHdrChk = fdt_check_header(fdt_location); 
+      // Make sure we are looking at a good location
+      if ((fdt_location != 0) && (fdtHdrChk == 0)) {
+         printf("ar6mx_tv_or_aio_reporting(): passed fdt_check_header\n");
+         //find the frame buffer node
+         int offset = fdt_path_offset(fdt_location, "/fb@0");
+
+         // adjust from RGB24 to RGB18
+         int propres = fdt_setprop_string(fdt_location, offset, 
+                                          "interface_pix_fmt", "RGB18");
+         // check result
+         if (propres == 0)  {
+            printf("ar6mx_tv_or_aio_reporting(): fb@0 interface_pix_fmt now RGB18\n");
+         }   
+         else {
+            printf("ar6mx_tv_or_aio_reporting(): fdt_setprop_inplace returned error %d\n", 
+                   propres);
+         }   
+
+         // repeat with the next framebuffer device
+         offset = fdt_path_offset(fdt_location, "/fb@1");
+         propres = fdt_setprop_string(fdt_location, offset, 
+                   "interface_pix_fmt", "RGB18");
+      }
+   else {
+      printf("ar6mx_tv_or_aio_reporting(): fdt_check_header failed using 0x%x with error %d\n", 
+             (unsigned int)fdt_location, fdtHdrChk); 
+   }   
+
+  }
 }
 
 int dram_init(void)

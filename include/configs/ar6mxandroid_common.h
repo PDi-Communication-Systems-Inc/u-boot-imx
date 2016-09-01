@@ -64,6 +64,7 @@
 #define CONFIG_EXTRA_ENV_SETTINGS					\
 	"splashpos=m,m\0"	  \
 	"fdt_high=0xffffffff\0"	  \
+	"fdt_addr=0x14f00000\0"   \
 	"initrd_high=0xffffffff\0" \
 		"bootargs=console=ttymxc0,115200\0"	\
 		"bootargs_base=setenv bootargs console=ttymxc0,115200\0"\
