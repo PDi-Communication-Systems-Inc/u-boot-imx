@@ -172,7 +172,8 @@ struct mmc *find_mmc_device(int dev_num)
 
 	list_for_each(entry, &mmc_devices) {
 		m = list_entry(entry, struct mmc, link);
-
+                /* printf("find_mmc_device(): Capacity of %d is %llu\n", 
+                       dev_num, m->capacity);  */
 		if (m->block_dev.dev == dev_num)
 			return m;
 	}

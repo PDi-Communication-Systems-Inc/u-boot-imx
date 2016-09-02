@@ -106,11 +106,10 @@ static void fini_mmc_for_env(struct mmc *mmc)
 }
 
 #ifdef CONFIG_CMD_SAVEENV
-static inline int write_env(struct mmc *mmc, unsigned long size,
+static inline int write_env(int mmc_env_devno, struct mmc *mmc, unsigned long size,
 			    unsigned long offset, const void *buffer)
 {
 	uint blk_start, blk_cnt, n;
-	int mmc_env_devno = mmc_get_env_devno();
 
 	blk_start	= ALIGN(offset, mmc->write_bl_len) / mmc->write_bl_len;
 	blk_cnt		= ALIGN(size, mmc->write_bl_len) / mmc->write_bl_len;
@@ -129,9 +128,25 @@ int saveenv(void)
 {
 	ALLOC_CACHE_ALIGN_BUFFER(env_t, env_new, 1);
 	int mmc_env_devno = mmc_get_env_devno();
+        printf("saveenv(): mmc_dev=%d\n", mmc_env_devno);
 	ssize_t	len;
 	char	*res;
 	struct mmc *mmc = find_mmc_device(mmc_env_devno);
+
+        /* There is a mismatch between how mmc devices
+           are enumerated by SOC and u-boot, let's 
+           try counting down to find usable media */
+        if (mmc == NULL)  {
+           while ((mmc_env_devno >= 0) && (mmc == NULL)){
+              mmc = find_mmc_device(--mmc_env_devno);
+              /* Avoid devices like sd card slots with nothing inserted */
+              if ((mmc != NULL) && (mmc->capacity == 0)) {
+                 mmc = NULL;
+              }
+           }
+        }
+        printf("saveenv(): forcing mmc_dev=%d\n", mmc_env_devno);
+
 	u32	offset;
 	int	ret, copy = 0;
 
@@ -160,9 +175,10 @@ int saveenv(void)
 		goto fini;
 	}
 
-	printf("Writing to %sMMC(%d)... ", copy ? "redundant " : "",
+	printf("Writing to %sMMC(%d)... \n", copy ? "redundant " : "",
 	       mmc_env_devno);
-	if (write_env(mmc, CONFIG_ENV_SIZE, offset, (u_char *)env_new)) {
+	if (write_env(mmc_env_devno, mmc, 
+                      CONFIG_ENV_SIZE, offset, (u_char *)env_new)) {
 		puts("failed\n");
 		ret = 1;
 		goto fini;

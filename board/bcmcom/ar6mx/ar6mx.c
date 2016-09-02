@@ -302,17 +302,24 @@ static struct fsl_esdhc_cfg usdhc_cfg[3] = {
 
 int mmc_get_env_devno(void)
 {
+        /* Note info on this register in section 60.7.2
+           SRC Boot Mode Register 1 (SRC_SBMR1)
+           contains bits that reflect status of Boot Mode
+           Pins of the chip, reset depends on pads
+           Address: 20D_8000h base + 4h offset = 20D_8004h */
 	u32 soc_sbmr = readl(SRC_BASE_ADDR + 0x4);
 	u32 dev_no;
 	u32 bootsel;
 
+        /* BOOT_CFG1[7:6] Boot Device Selection 
+           01b to from USDHC interfaces */
 	bootsel = (soc_sbmr & 0x000000FF) >> 6 ;
 
 	/* If not boot from sd/mmc, use default value */
 	if (bootsel != 1)
 		return CONFIG_SYS_MMC_ENV_DEV;
 
-	/* BOOT_CFG2[3] and BOOT_CFG2[4] */
+	/* BOOT_CFG2[3] (bit 11) and BOOT_CFG2[4] (bit 12) */
 	dev_no = (soc_sbmr & 0x00001800) >> 11;
 
 	/* need ubstract 1 to map to the mmc device id
