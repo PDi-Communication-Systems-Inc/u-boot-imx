@@ -30,6 +30,9 @@
 #include <miiphy.h>
 #include <netdev.h>
 
+// recovery header to avoid implicit function Warning
+#include <recovery.h>
+
 // Device-tree support headers
 #include <libfdt.h>
 #include <fdt_support.h>
@@ -141,7 +144,9 @@ static iomux_v3_cfg_t const gpio_pads[] = {
 	MX6_PAD_NANDF_D7__GPIO2_IO07 | MUX_PAD_CTRL(NO_PAD_CTRL),
 };
 
-/* string replace code from user chantra on: 
+static int model_type = -1;
+
+/* string replace code from user chantra on:
    http://coding.debuntu.org/c-implementing-str_replace-replace-all-occurrences-substring */
 char *
 str_replace ( const char *string, const char *substr, const char *replacement ){
@@ -149,7 +154,7 @@ str_replace ( const char *string, const char *substr, const char *replacement ){
   char *newstr = NULL;
   char *oldstr = NULL;
   char *head = NULL;
- 
+
   /* if either substr or replacement is NULL, duplicate string a let caller handle it */
   if ( substr == NULL || replacement == NULL ) return strdup (string);
   newstr = strdup (string);
@@ -193,19 +198,19 @@ int ar6mx_board_version(void) {
 
   /* print board version in serial console */
   if (ret == 15) {
-     printf("Board Version: %x%x%x%x or 0x%x (TAB Solo)\n", 
+     printf("Board Version: %x%x%x%x or 0x%x (TAB Solo)\n",
             b3, b2, b1, b0, ret);
   }
   else if (ret == 1) {
-     printf("Board Version: %x%x%x%x or 0x%x (TAB2 Quad)\n", 
+     printf("Board Version: %x%x%x%x or 0x%x (TAB2 Quad)\n",
             b3, b2, b1, b0, ret);
   }
   else {
-     printf("Board Version: %x%x%x%x or 0x%x (Unknown)\n", 
+     printf("Board Version: %x%x%x%x or 0x%x (Unknown)\n",
             b3, b2, b1, b0, ret);
   }
-  
-  /* update bootargs with board version, could be done in 
+
+  /* update bootargs with board version, could be done in
      kernel board file, but okay here too */
   char* cmdline = getenv("bootargs");
   char* cmdline_a = (char *) malloc(strlen(cmdline) + 24);
@@ -217,10 +222,9 @@ int ar6mx_board_version(void) {
 
 void ar6mx_tv_or_aio_reporting(void) {
 
-   /* Report the model class (type) 
-      P14TAB, Standard Module, SW Module for TV (high input) 
+   /* Report the model class (type)
+      P14TAB, Standard Module, SW Module for TV (high input)
       AIO (P19A), M-Series TV, or Universal Module for AIO (low input) */
-   int model_type = -1;
    printf("PDi Model Class: ");
    if (gpio_get_value(AR6MX_TV_OR_AIO)) {
       printf("TV (TAB)\n");
@@ -231,56 +235,14 @@ void ar6mx_tv_or_aio_reporting(void) {
       model_type = 0;
    }
 
-
    /* update bootargs with model type  */
    char* cmdline = getenv("bootargs");
-   char* cmdline_a = (char *) malloc(strlen(cmdline) + 20); 
-   sprintf(cmdline_a, "%s model_type=%s ", cmdline, 
-           (model_type == 0) ? "AIO" : "TV"); 
+   char* cmdline_a = (char *) malloc(strlen(cmdline) + 20);
+   sprintf(cmdline_a, "%s model_type=%s ", cmdline,
+           (model_type == 0) ? "AIO" : "TV");
    setenv("bootargs", cmdline_a);
    free(cmdline_a);
 
-   /* Replace RGB24 with RGB18 as needed */
-   if (model_type == 1) {
-      char* updated_bootargs = str_replace(
-          getenv("bootargs_hdmi"), "RGB24", "RGB18");
-      setenv("bootargs_hdmi", updated_bootargs);
-      updated_bootargs = str_replace(
-          getenv("bootargs_dual"), "RGB24", "RGB18");
-      setenv("bootargs_dual", updated_bootargs);
-
-      /* Update device tree with new information */
-      void *fdt_location = (void *)getenv_hex("fdt_addr", 0);
-      int fdtHdrChk = fdt_check_header(fdt_location); 
-      // Make sure we are looking at a good location
-      if ((fdt_location != 0) && (fdtHdrChk == 0)) {
-         printf("ar6mx_tv_or_aio_reporting(): passed fdt_check_header\n");
-         //find the frame buffer node
-         int offset = fdt_path_offset(fdt_location, "/fb@0");
-
-         // adjust from RGB24 to RGB18
-         int propres = fdt_setprop_string(fdt_location, offset, 
-                                          "interface_pix_fmt", "RGB18");
-         // check result
-         if (propres == 0)  {
-            printf("ar6mx_tv_or_aio_reporting(): fb@0 interface_pix_fmt now RGB18\n");
-         }   
-         else {
-            printf("ar6mx_tv_or_aio_reporting(): fdt_setprop_inplace returned error %d\n", 
-                   propres);
-         }   
-
-         // repeat with the next framebuffer device
-         offset = fdt_path_offset(fdt_location, "/fb@1");
-         propres = fdt_setprop_string(fdt_location, offset, 
-                   "interface_pix_fmt", "RGB18");
-      }
-   else {
-      printf("ar6mx_tv_or_aio_reporting(): fdt_check_header failed using 0x%x with error %d\n", 
-             (unsigned int)fdt_location, fdtHdrChk); 
-   }   
-
-  }
 }
 
 int dram_init(void)
@@ -311,7 +273,7 @@ int mmc_get_env_devno(void)
 	u32 dev_no;
 	u32 bootsel;
 
-        /* BOOT_CFG1[7:6] Boot Device Selection 
+        /* BOOT_CFG1[7:6] Boot Device Selection
            01b to from USDHC interfaces */
 	bootsel = (soc_sbmr & 0x000000FF) >> 6 ;
 
@@ -525,7 +487,6 @@ static int detect_hdmi(struct display_info_t const *dev)
 	return readb(&hdmi->phy_stat0) & HDMI_DVI_STAT;
 }
 
-
 static void disable_lvds(struct display_info_t const *dev)
 {
 	struct iomuxc *iomux = (struct iomuxc *)IOMUXC_BASE_ADDR;
@@ -554,47 +515,99 @@ static void enable_lvds(struct display_info_t const *dev)
 	writel(reg, &iomux->gpr[2]);
 }
 
-static struct display_info_t const displays[] = {{
-	.bus	= -1,
-	.addr	= 0,
-	.pixfmt	= IPU_PIX_FMT_RGB24,
-	.detect	= NULL,
-	.enable	= enable_lvds,
-	.mode	= {
-		.name           = "AU0_G185XW01",
-		.refresh        = 60,
-		.xres           = 1366,
-		.yres           = 768,
-		.pixclock       = 12844,
-		.left_margin    = 220,
-		.right_margin   = 40,
-		.upper_margin   = 21,
-		.lower_margin   = 7,
-		.hsync_len      = 60,
-		.vsync_len      = 10,
-		.sync           = FB_SYNC_EXT,
-		.vmode          = FB_VMODE_NONINTERLACED
-} }, {
-	.bus	= -1,
-	.addr	= 0,
-	.pixfmt	= IPU_PIX_FMT_RGB24,
-	.detect	= detect_hdmi,
-	.enable	= do_enable_hdmi,
-	.mode	= {
-		.name           = "HDMI",
-		.refresh        = 60,
-		.xres           = 1024,
-		.yres           = 768,
-		.pixclock       = 15385,
-		.left_margin    = 220,
-		.right_margin   = 40,
-		.upper_margin   = 21,
-		.lower_margin   = 7,
-		.hsync_len      = 60,
-		.vsync_len      = 10,
-		.sync           = FB_SYNC_EXT,
-		.vmode          = FB_VMODE_NONINTERLACED
-} } };
+static struct display_info_t const displays[] = {
+	{
+        .bus    = -1,
+        .addr   = 0,
+        .pixfmt = IPU_PIX_FMT_RGB24,
+        .detect = NULL,
+        .enable = enable_lvds,
+        .mode   = {
+                .name           = "AU0_G185XW01",
+                .refresh        = 60,
+                .xres           = 1366,
+                .yres           = 768,
+                .pixclock       = 12844,
+                .left_margin    = 220,
+                .right_margin   = 40,
+                .upper_margin   = 21,
+                .lower_margin   = 7,
+                .hsync_len      = 60,
+                .vsync_len      = 10,
+                .sync           = FB_SYNC_EXT,
+                .vmode          = FB_VMODE_NONINTERLACED
+        }
+	},
+  {
+        .bus    = -1,
+        .addr   = 0,
+        .pixfmt = IPU_PIX_FMT_RGB24,
+        .detect = detect_hdmi,
+        .enable = do_enable_hdmi,
+        .mode   = {
+                .name           = "HDMI",
+                .refresh        = 60,
+                .xres           = 1280,
+                .yres           = 720,
+                .pixclock       = 15385,
+                .left_margin    = 220,
+                .right_margin   = 40,
+                .upper_margin   = 21,
+                .lower_margin   = 7,
+                .hsync_len      = 60,
+                .vsync_len      = 10,
+                .sync           = FB_SYNC_EXT,
+                .vmode          = FB_VMODE_NONINTERLACED
+        }
+  }
+};
+
+void ft_board_setup(void *blob, bd_t *bd) {
+
+   // open the device tree
+   void *fdt_location = (void *)getenv_hex("fdt_addr", 0);
+   int fdtHdrChk = fdt_check_header(fdt_location);
+
+   if ((fdt_location != 0) && (fdtHdrChk == 0)) {
+      printf("ft_board_setup(): passed fdt_check_header\n");
+
+   }
+   else {
+      printf("ft_board_setup(): Device tree header at 0x%x unverifiable, error %d\n",
+             (unsigned int)fdt_location, fdtHdrChk);
+      return;
+   }
+
+   if (detect_hdmi(&displays[1])) {
+      // for hdmi, flip fb1 and fb0 since android prioritizes display on fb0
+      int offset = fdt_path_offset(fdt_location, "/fb@0");
+      fdt_set_name(fdt_location, offset, "fb@ldb");
+      offset = fdt_path_offset(fdt_location, "/fb@1");
+      fdt_set_name(fdt_location, offset, "fb@0");
+			fdt_status_okay(fdt_location, offset);
+      offset = fdt_path_offset(fdt_location, "/fb@ldb");
+      fdt_set_name(fdt_location, offset, "fb@1");
+   }
+
+   if (model_type == 1) {
+      printf("ft_board_setup(): passed fdt_check_header\n");
+      //find the frame buffer node
+      int offset = fdt_path_offset(fdt_location, "/fb@1");
+
+      // adjust from RGB24 to RGB18
+      int propres = fdt_setprop_string(fdt_location, offset,
+                                          "interface_pix_fmt", "RGB18");
+      // check result
+      if (propres == 0)  {
+         printf("ft_board_setup(): fb@1 interface_pix_fmt now RGB18\n");
+      }
+      else {
+         printf("ft_board_setup(): fdt_setprop_inplace returned error %d\n",
+                propres);
+      }
+  }
+
+}
 
 int board_video_skip(void)
 {
@@ -790,22 +803,14 @@ void board_fastboot_setup(void)
 	case MMC3_BOOT:
 	    if (!getenv("fastboot_dev"))
 			setenv("fastboot_dev", "mmc0");
-	    if (!getenv("bootcmd")) {
-				if(detect_hdmi(&displays[1]))
-					setenv("bootcmd", "run bootargs_hdmi;booti mmc0");
-				else
-					setenv("bootcmd", "run bootargs_ldb;booti mmc0");
-			}
+	    if (!getenv("bootcmd"))
+			setenv("bootcmd", "run bootargs_base;booti mmc0");
 	    break;
 	case MMC4_BOOT:
 	    if (!getenv("fastboot_dev"))
 			setenv("fastboot_dev", "mmc1");
-	    if (!getenv("bootcmd")) {
-				if(detect_hdmi(&displays[1]))
-					setenv("bootcmd", "run bootargs_hdmi;booti mmc1");
-				else
-					setenv("bootcmd", "run bootargs_ldb;booti mmc1");
-			}
+	    if (!getenv("bootcmd"))
+			setenv("bootcmd", "run bootargs_base;booti mmc1");
 	    break;
 #endif /*CONFIG_FASTBOOT_STORAGE_MMC*/
 	default:
@@ -892,7 +897,7 @@ void board_recovery_setup(void)
 		if (!getenv("bootcmd_android_recovery"))
 			setenv("bootcmd_android_recovery",
 				"booti sata recovery");
-		break; 
+		break;
 #endif /*CONFIG_FASTBOOT_STORAGE_SATA*/
 #if defined(CONFIG_FASTBOOT_STORAGE_MMC)
 	case SD2_BOOT:
@@ -911,26 +916,19 @@ void board_recovery_setup(void)
 		if (!getenv("bootcmd_android_recovery"))
 			setenv("bootcmd_android_recovery",
 				"booti mmc1 recovery");
-		break;  
+		break;
 #endif /*CONFIG_FASTBOOT_STORAGE_MMC*/
 	default:
 		printf("Unsupported bootup device for recovery: dev: %d\n",
 			bootdev);
 		return;
-	} 
+	}
 
 
 	printf("setup env for recovery..\n");
 
         /* PDi mrobbeloth, need to account for those lvds displays */
-        if(detect_hdmi(&displays[1])) {
-	   setenv("bootcmd", "run bootargs_hdmi;run bootcmd_android_recovery");
-        } 
-        else {
-           setenv("bootcmd", "run bootargs_ldb;run bootcmd_android_recovery");
-        } 
-
-
+	   setenv("bootcmd", "run bootargs_base;run bootcmd_android_recovery");
 }
 
 //#endif /*CONFIG_ANDROID_RECOVERY*/
@@ -959,4 +957,3 @@ void udc_pins_setting(void)
 
 }
 #endif
-

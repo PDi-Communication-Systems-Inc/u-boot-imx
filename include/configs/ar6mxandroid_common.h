@@ -67,21 +67,9 @@
 	"fdt_addr=0x14f00000\0"   \
 	"initrd_high=0xffffffff\0" \
 		"bootargs=console=ttymxc0,115200\0"	\
-		"bootargs_base=setenv bootargs console=ttymxc0,115200\0"\
-		"bootargs_ldb=setenv bootargs ${bootargs} init=/init "	\
-			"video=mxcfb0:dev=ldb,1366x768M@60,if=RGB24,bpp=32 " \
-			"video=mxcfb1:off video=mxcfb2:off vmalloc=400M "	\
-			"androidboot.console=ttymxc0 androidboot.hardware=freescale\0"	\
-		"bootargs_hdmi=setenv bootargs ${bootargs} init=/init "	\
-			"video=mxcfb1:off " \
-			"video=mxcfb0:dev=hdmi,1280x720M@60,if=RGB24,bpp=32 "\
-                        "video=mxcfb2:off vmalloc=400M "	\
-			"androidboot.console=ttymxc0 androidboot.hardware=freescale\0"	\
-		"bootargs_dual=setenv bootargs ${bootargs} init=/init "	\
-			"video=mxcfb0:dev=ldb,1366x768M@60,if=RGB24,bpp=32 " \
-			"video=mxcfb2:dev=hdmi,1280x720M@60,if=RGB24,bpp=32 " \
-			"video=mxcfb1:off vmalloc=400M "	\
-			"androidboot.console=ttymxc0 androidboot.hardware=freescale\0"
+		"bootargs_base=setenv bootargs console=ttymxc0,115200 "\
+			"vmalloc=400M androidboot.console=ttymxc0 "\
+			"androidboot.hardware=freescale\0"
 
 #if defined(CONFIG_FASTBOOT_STORAGE_NAND)
 #define ANDROID_FASTBOOT_NAND_PARTS "16m@64m(boot) 16m@80m(recovery) 810m@96m(android_root)ubifs"
