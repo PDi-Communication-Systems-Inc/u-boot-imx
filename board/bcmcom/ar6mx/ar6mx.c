@@ -589,22 +589,24 @@ void ft_board_setup(void *blob, bd_t *bd) {
       fdt_set_name(fdt_location, offset, "fb@1");
    }
 
-   if (model_type == 1) {
+   if ((model_type == 1) && (!detect_hdmi(&displays[1]))) {
       printf("ft_board_setup(): passed fdt_check_header\n");
       //find the frame buffer node
-      int offset = fdt_path_offset(fdt_location, "/fb@1");
+      int offset = fdt_path_offset(fdt_location, "/fb@0");
 
       // adjust from RGB24 to RGB18
       int propres = fdt_setprop_string(fdt_location, offset,
-                                          "interface_pix_fmt", "RGB18");
+                                          "interface_pix_fmt", "LVDS666");
       // check result
       if (propres == 0)  {
-         printf("ft_board_setup(): fb@1 interface_pix_fmt now RGB18\n");
+         printf("ft_board_setup(): fb@1 interface_pix_fmt now LVDS666\n");
       }
       else {
          printf("ft_board_setup(): fdt_setprop_inplace returned error %d\n",
                 propres);
       }
+
+      // propres = fdt_setprop_u32(fdt_location, offset, "default_bpp", 18);
   }
 
 }
