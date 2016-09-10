@@ -144,7 +144,13 @@ static iomux_v3_cfg_t const gpio_pads[] = {
 	MX6_PAD_NANDF_D7__GPIO2_IO07 | MUX_PAD_CTRL(NO_PAD_CTRL),
 };
 
-static int model_type = -1;
+enum MODEL_TYPE {
+   NONE = -1,
+   AIO = 0,
+   TV = 1
+};
+
+static enum MODEL_TYPE mt = NONE;
 
 /* string replace code from user chantra on:
    http://coding.debuntu.org/c-implementing-str_replace-replace-all-occurrences-substring */
@@ -228,18 +234,30 @@ void ar6mx_tv_or_aio_reporting(void) {
    printf("PDi Model Class: ");
    if (gpio_get_value(AR6MX_TV_OR_AIO)) {
       printf("TV (TAB)\n");
-      model_type = 1;
+      mt = TV;
    }
    else {
       printf("AIO\n");
-      model_type = 0;
+      mt = AIO;
    }
 
    /* update bootargs with model type  */
    char* cmdline = getenv("bootargs");
    char* cmdline_a = (char *) malloc(strlen(cmdline) + 20);
-   sprintf(cmdline_a, "%s model_type=%s ", cmdline,
-           (model_type == 0) ? "AIO" : "TV");
+   switch (mt) {
+      case NONE: 
+         sprintf(cmdline_a, "%s model_type=%s ", cmdline, "NONE");
+         break;
+      case AIO: 
+         sprintf(cmdline_a, "%s model_type=%s ", cmdline, "AIO");
+         break;
+      case TV:
+         sprintf(cmdline_a, "%s model_type=%s ", cmdline, "TV");
+         break;
+      default:
+         sprintf(cmdline_a, "%s model_type=%s ", cmdline, "UNDEFINED");
+ 
+   }
    setenv("bootargs", cmdline_a);
    free(cmdline_a);
 
@@ -519,7 +537,7 @@ static struct display_info_t const displays[] = {
 	{
         .bus    = -1,
         .addr   = 0,
-        .pixfmt = IPU_PIX_FMT_RGB24,
+        .pixfmt = IPU_PIX_FMT_LVDS666,
         .detect = NULL,
         .enable = enable_lvds,
         .mode   = {
@@ -578,18 +596,23 @@ void ft_board_setup(void *blob, bd_t *bd) {
       return;
    }
 
-   if (detect_hdmi(&displays[1])) {
+   // traditional p14 with tv and android
+   if ((mt == TV) && (detect_hdmi(&displays[1]))) {
       // for hdmi, flip fb1 and fb0 since android prioritizes display on fb0
       int offset = fdt_path_offset(fdt_location, "/fb@0");
       fdt_set_name(fdt_location, offset, "fb@ldb");
       offset = fdt_path_offset(fdt_location, "/fb@1");
       fdt_set_name(fdt_location, offset, "fb@0");
-			fdt_status_okay(fdt_location, offset);
+      fdt_status_okay(fdt_location, offset);
       offset = fdt_path_offset(fdt_location, "/fb@ldb");
       fdt_set_name(fdt_location, offset, "fb@1");
-   }
+      offset = fdt_path_offset(fdt_location, "/fb@1");
 
-   if ((model_type == 1) && (!detect_hdmi(&displays[1]))) {
+      // disable lvds display nothing is connected to it
+      fdt_status_disabled(fdt_location, offset);
+   }
+   // p14 or p19 with tv, android, and lvds mipi-csi2 board--aka tab3 level hw
+   else if ((mt == TV) && (!detect_hdmi(&displays[1]))) {
       printf("ft_board_setup(): passed fdt_check_header\n");
       //find the frame buffer node
       int offset = fdt_path_offset(fdt_location, "/fb@0");
@@ -607,6 +630,10 @@ void ft_board_setup(void *blob, bd_t *bd) {
       }
 
       // propres = fdt_setprop_u32(fdt_location, offset, "default_bpp", 18);
+  }
+  // traditional p19 or similar with android only and lvds (no tv board)
+  else if (mt == AIO) {
+     printf("ft_board_setup(): no change for traditional AIO mode\n");
   }
 
 }
@@ -930,7 +957,7 @@ void board_recovery_setup(void)
 	printf("setup env for recovery..\n");
 
         /* PDi mrobbeloth, need to account for those lvds displays */
-	   setenv("bootcmd", "run bootargs_base;run bootcmd_android_recovery");
+	setenv("bootcmd", "run bootargs_base;run bootcmd_android_recovery");
 }
 
 //#endif /*CONFIG_ANDROID_RECOVERY*/
