@@ -218,10 +218,10 @@ int ar6mx_board_version(void) {
 
   /* update bootargs with board version, could be done in
      kernel board file, but okay here too */
-  char* cmdline = getenv("bootargs");
+  char* cmdline = getenv("bootargs_base");
   char* cmdline_a = (char *) malloc(strlen(cmdline) + 24);
   sprintf(cmdline_a, "%s board_version=%x%x%x%x ", cmdline, b3, b2, b1, b0);
-  setenv("bootargs", cmdline_a);
+  setenv("bootargs_base", cmdline_a);
   free(cmdline_a);
   return ret;
 }
@@ -242,7 +242,7 @@ void ar6mx_tv_or_aio_reporting(void) {
    }
 
    /* update bootargs with model type  */
-   char* cmdline = getenv("bootargs");
+   char* cmdline = getenv("bootargs_base");
    char* cmdline_a = (char *) malloc(strlen(cmdline) + 20);
    switch (mt) {
       case NONE: 
@@ -258,7 +258,7 @@ void ar6mx_tv_or_aio_reporting(void) {
          sprintf(cmdline_a, "%s model_type=%s ", cmdline, "UNDEFINED");
  
    }
-   setenv("bootargs", cmdline_a);
+   setenv("bootargs_base", cmdline_a);
    free(cmdline_a);
 
 }
