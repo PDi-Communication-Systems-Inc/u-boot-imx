@@ -69,7 +69,9 @@
 		"bootargs=console=ttymxc0,115200\0"	\
 		"bootargs_base=setenv bootargs console=ttymxc0,115200 "\
 			"vmalloc=400M androidboot.console=ttymxc0 "\
-			"androidboot.hardware=freescale\0"
+			"androidboot.hardware=freescale "\
+			"androidboot.selinux=disabled "\
+			"androidboot.dm_verity=disabled\0"
 
 #if defined(CONFIG_FASTBOOT_STORAGE_NAND)
 #define ANDROID_FASTBOOT_NAND_PARTS "16m@64m(boot) 16m@80m(recovery) 810m@96m(android_root)ubifs"
