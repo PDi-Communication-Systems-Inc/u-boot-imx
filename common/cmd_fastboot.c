@@ -1788,6 +1788,8 @@ int do_booti(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 #ifdef CONFIG_OF_LIBFDT
 	if (hdr->second_size)
 		printf("fdt      @ %08x (%d)\n", hdr->second_addr, hdr->second_size);
+        else 
+		printf("fdt has no size\n");
 #endif /*CONFIG_OF_LIBFDT*/
 
 #ifdef CONFIG_CMDLINE_TAG
