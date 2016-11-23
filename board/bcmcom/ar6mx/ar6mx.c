@@ -598,6 +598,8 @@ void ft_board_setup(void *blob, bd_t *bd) {
 
    // traditional p14 with tv and android
    if ((mt == TV) && (detect_hdmi(&displays[1]))) {
+      printf("TV style device with HDMI display used\n");
+
       // for hdmi, flip fb1 and fb0 since android prioritizes display on fb0
       int offset = fdt_path_offset(fdt_location, "/fb@0");
       fdt_set_name(fdt_location, offset, "fb@ldb");
@@ -613,7 +615,7 @@ void ft_board_setup(void *blob, bd_t *bd) {
    }
    // p14 or p19 with tv, android, and lvds mipi-csi2 board--aka tab3 level hw
    else if ((mt == TV) && (!detect_hdmi(&displays[1]))) {
-      printf("ft_board_setup(): passed fdt_check_header\n");
+      printf("TV style device with LVDS display most likely\n");
       //find the frame buffer node
       int offset = fdt_path_offset(fdt_location, "/fb@0");
 
