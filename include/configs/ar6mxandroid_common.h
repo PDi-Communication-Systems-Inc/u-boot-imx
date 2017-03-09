@@ -69,7 +69,7 @@
 		"bootargs=console=ttymxc0,115200\0"	\
 		"bootargs_base=setenv bootargs console=ttymxc0,115200 "\
 			"vmalloc=400M androidboot.console=ttymxc0 "\
-                        "androidboot.selinux=disabled ldb_di_clk_sel=pll5_video_div "\
+                        "ldb_di_clk_sel=pll5_video_div "\
 			"androidboot.hardware=freescale\0"
 
 #if defined(CONFIG_FASTBOOT_STORAGE_NAND)
