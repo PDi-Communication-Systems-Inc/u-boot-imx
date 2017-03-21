@@ -51,7 +51,7 @@ DECLARE_GLOBAL_DATA_PTR;
 		PAD_CTL_SPEED_MED | PAD_CTL_DSE_40ohm |	\
 		PAD_CTL_SRE_FAST | PAD_CTL_HYS)
 
-#define USDHC_PAD_CTRL (PAD_CTL_PUS_47K_UP | \
+#define USDHC_PAD_CTRL (PAD_CTL_PUS_100K_UP | \
 	   PAD_CTL_SPEED_LOW | PAD_CTL_DSE_80ohm | \
 	   PAD_CTL_SRE_FAST | PAD_CTL_HYS)
 
@@ -64,8 +64,8 @@ DECLARE_GLOBAL_DATA_PTR;
 
 #define USDHC3_CD_GPIO IMX_GPIO_NR(7, 0)
 
-/* Declare version gpio pins */
-iomux_v3_cfg_t board_ver_pads[] = {
+/* Declare version gpio pins n*/
+static iomux_v3_cfg_t board_ver_pads[] = {
   MX6_PAD_DISP0_DAT4__GPIO4_IO25,
   MX6_PAD_DISP0_DAT5__GPIO4_IO26,
   MX6_PAD_DISP0_DAT6__GPIO4_IO27,
@@ -99,12 +99,12 @@ iomux_v3_cfg_t board_ver_pads[] = {
 #define AR6MX_VER_B2 	IMX_GPIO_NR(4, 27)
 #define AR6MX_VER_B3 	IMX_GPIO_NR(4, 28)
 
-iomux_v3_cfg_t const uart1_pads[] = {
+static iomux_v3_cfg_t const uart1_pads[] = {
 	MX6_PAD_SD3_DAT7__UART1_TX_DATA | MUX_PAD_CTRL(UART_PAD_CTRL),
 	MX6_PAD_SD3_DAT6__UART1_RX_DATA | MUX_PAD_CTRL(UART_PAD_CTRL),
 };
 
-iomux_v3_cfg_t const uart4_pads[] = {
+static iomux_v3_cfg_t const uart4_pads[] = {
 	MX6_PAD_KEY_COL0__UART4_TX_DATA | MUX_PAD_CTRL(UART_PAD_CTRL),
 	MX6_PAD_KEY_ROW0__UART4_RX_DATA | MUX_PAD_CTRL(UART_PAD_CTRL),
 };
@@ -120,7 +120,7 @@ static iomux_v3_cfg_t const usdhc3_pads[] = {
 
 };
 
-iomux_v3_cfg_t const usdhc4_pads[] = {
+static iomux_v3_cfg_t const usdhc4_pads[] = {
 	MX6_PAD_SD4_CLK__SD4_CLK   | MUX_PAD_CTRL(USDHC_PAD_CTRL),
 	MX6_PAD_SD4_CMD__SD4_CMD   | MUX_PAD_CTRL(USDHC_PAD_CTRL),
 	MX6_PAD_SD4_DAT0__SD4_DATA0 | MUX_PAD_CTRL(USDHC_PAD_CTRL),
@@ -134,14 +134,14 @@ iomux_v3_cfg_t const usdhc4_pads[] = {
 };
 
 static iomux_v3_cfg_t const gpio_pads[] = {
-	MX6_PAD_NANDF_D0__GPIO2_IO00 | MUX_PAD_CTRL(PAD_CTL_PUS_100K_UP | PAD_CTL_HYS | PAD_CTL_SPEED_MED | PAD_CTL_DSE_40ohm),
-	MX6_PAD_NANDF_D1__GPIO2_IO01 | MUX_PAD_CTRL(PAD_CTL_PUS_100K_UP | PAD_CTL_HYS | PAD_CTL_SPEED_MED | PAD_CTL_DSE_40ohm),
-	MX6_PAD_NANDF_D2__GPIO2_IO02 | MUX_PAD_CTRL(PAD_CTL_PUS_100K_UP | PAD_CTL_HYS | PAD_CTL_SPEED_MED | PAD_CTL_DSE_40ohm),
-	MX6_PAD_NANDF_D3__GPIO2_IO03 | MUX_PAD_CTRL(PAD_CTL_PUS_100K_UP | PAD_CTL_HYS | PAD_CTL_SPEED_MED | PAD_CTL_DSE_40ohm),
-	MX6_PAD_NANDF_D4__GPIO2_IO04 | MUX_PAD_CTRL(PAD_CTL_PUS_100K_UP | PAD_CTL_HYS | PAD_CTL_SPEED_MED | PAD_CTL_DSE_40ohm),
-	MX6_PAD_NANDF_D5__GPIO2_IO05 | MUX_PAD_CTRL(PAD_CTL_PUS_100K_UP | PAD_CTL_HYS | PAD_CTL_SPEED_MED | PAD_CTL_DSE_40ohm),
-	MX6_PAD_NANDF_D6__GPIO2_IO06 | MUX_PAD_CTRL(PAD_CTL_PUS_100K_UP | PAD_CTL_HYS | PAD_CTL_SPEED_MED | PAD_CTL_DSE_40ohm),
-	MX6_PAD_NANDF_D7__GPIO2_IO07 | MUX_PAD_CTRL(PAD_CTL_PUS_100K_UP | PAD_CTL_HYS | PAD_CTL_SPEED_MED | PAD_CTL_DSE_40ohm),
+	MX6_PAD_NANDF_D0__GPIO2_IO00 | MUX_PAD_CTRL(PAD_CTL_PUS_100K_UP | PAD_CTL_HYS | PAD_CTL_SPEED_HIGH | PAD_CTL_DSE_40ohm),
+	MX6_PAD_NANDF_D1__GPIO2_IO01 | MUX_PAD_CTRL(PAD_CTL_PUS_100K_UP | PAD_CTL_HYS | PAD_CTL_SPEED_HIGH | PAD_CTL_DSE_40ohm),
+	MX6_PAD_NANDF_D2__GPIO2_IO02 | MUX_PAD_CTRL(PAD_CTL_PUS_100K_UP | PAD_CTL_HYS | PAD_CTL_SPEED_HIGH | PAD_CTL_DSE_40ohm),
+	MX6_PAD_NANDF_D3__GPIO2_IO03 | MUX_PAD_CTRL(PAD_CTL_PUS_100K_UP | PAD_CTL_HYS | PAD_CTL_SPEED_HIGH | PAD_CTL_DSE_40ohm),
+	MX6_PAD_NANDF_D4__GPIO2_IO04 | MUX_PAD_CTRL(PAD_CTL_PUS_100K_UP | PAD_CTL_HYS | PAD_CTL_SPEED_HIGH | PAD_CTL_DSE_40ohm),
+	MX6_PAD_NANDF_D5__GPIO2_IO05 | MUX_PAD_CTRL(PAD_CTL_PUS_100K_UP | PAD_CTL_HYS | PAD_CTL_SPEED_HIGH | PAD_CTL_DSE_40ohm),
+	MX6_PAD_NANDF_D6__GPIO2_IO06 | MUX_PAD_CTRL(PAD_CTL_PUS_100K_UP | PAD_CTL_HYS | PAD_CTL_SPEED_HIGH | PAD_CTL_DSE_40ohm),
+	MX6_PAD_NANDF_D7__GPIO2_IO07 | MUX_PAD_CTRL(PAD_CTL_PUS_100K_UP | PAD_CTL_HYS | PAD_CTL_SPEED_HIGH | PAD_CTL_DSE_40ohm),
 };
 
 enum MODEL_TYPE {
@@ -473,21 +473,34 @@ int board_phy_config(struct phy_device *phydev)
 
 static void setup_gpios(void)
 {
-	int i;
-
+	printf("enter setup_gpios\n");
 	imx_iomux_v3_setup_multiple_pads(gpio_pads, ARRAY_SIZE(gpio_pads));
 
-	for (i=0; i< 6;i++) {
-		gpio_direction_input(IMX_GPIO_NR(2, i));
-	};
-	gpio_direction_output(IMX_GPIO_NR(2, 6), 0);
-	gpio_direction_output(IMX_GPIO_NR(2, 7), 0);
+        /* Configure gpio on CN5 */
+        gpio_direction_input(AR6MX_TV_POWER_REQ);
+        gpio_direction_input(AR6MX_TV_OR_AIO);
+
+        // Floats high for P14, pulled low for AIO P19A
+        if (gpio_get_value(AR6MX_TV_OR_AIO)) {
+           printf("setup_gpios(): TV Mode detected\n");
+           gpio_direction_input(AR6MX_TV_ARROW_UP);
+           gpio_direction_input(AR6MX_TV_ARROW_DOWN);
+           gpio_direction_input(AR6MX_TV_ARROW_LEFT);
+        }    
+        else {
+           printf("setup_gpios(): AIO Mode detected\n");
+           gpio_direction_input(AR6MX_AIO_VOL_UP);
+           gpio_direction_input(AR6MX_AIO_VOL_DOWN);
+        }    
+
+	gpio_direction_output(AR6MX_ANDROID_PWRSTATE, 1);
+        gpio_direction_output(AR6MX_INTERNAL_SPK_ENABLE, 0);
 
         imx_iomux_v3_setup_multiple_pads(
            board_ver_pads,
            ARRAY_SIZE(board_ver_pads));
 
-};
+}
 
 #if defined(CONFIG_VIDEO_IPUV3)
 struct display_info_t {
@@ -760,10 +773,6 @@ int overwrite_console(void)
 int board_init(void)
 {
 
-        imx_iomux_v3_setup_multiple_pads(
-           board_ver_pads,
-           ARRAY_SIZE(board_ver_pads));
-
 	/* address of boot parameters */
 	gd->bd->bi_boot_params = PHYS_SDRAM + 0x100;
 
@@ -771,7 +780,9 @@ int board_init(void)
 	setup_sata();
 #endif
 
+	printf("Calling setup_gpios()\n");
 	setup_gpios();
+        printf("Returned setup_gpios()\n");
 
 	return 0;
 }
@@ -867,13 +878,6 @@ int check_recovery_cmd_file(void)
           u32 reg;
 
           recovery_mode =  recovery_check_and_clean_flag();
-	  iomux_v3_cfg_t pad1 = MX6_PAD_NANDF_D1__GPIO2_IO01;
-	  iomux_v3_cfg_t pad2 = MX6_PAD_NANDF_D2__GPIO2_IO02;
-	  iomux_v3_cfg_t pad3 = MX6_PAD_NANDF_D3__GPIO2_IO03;
-
-	  imx_iomux_v3_setup_pad(pad1);
-	  imx_iomux_v3_setup_pad(pad2);
-	  imx_iomux_v3_setup_pad(pad3);
 
           reg = readl(GPIO2_BASE_ADDR + GPIO_GDIR);
           reg &= ~(1<<1 | 1<<2 | 1<<3);
