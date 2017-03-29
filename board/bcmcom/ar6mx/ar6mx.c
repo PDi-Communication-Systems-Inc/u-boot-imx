@@ -550,7 +550,7 @@ static struct display_info_t const displays[] = {
 	{
         .bus    = -1,
         .addr   = 0,
-        .pixfmt = IPU_PIX_FMT_LVDS666,
+        .pixfmt = IPU_PIX_FMT_RGB666,
         .detect = NULL,
         .enable = enable_lvds,
         .mode   = {
