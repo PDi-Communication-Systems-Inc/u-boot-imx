@@ -550,7 +550,7 @@ static struct display_info_t const displays[] = {
 	{
         .bus    = -1,
         .addr   = 0,
-        .pixfmt = IPU_PIX_FMT_RGB666,
+        .pixfmt = IPU_PIX_FMT_LVDS666,
         .detect = NULL,
         .enable = enable_lvds,
         .mode   = {
@@ -559,14 +559,12 @@ static struct display_info_t const displays[] = {
                 .xres           = 1366,
                 .yres           = 768,
                 .pixclock       = 12844,
-                .left_margin    = 220,
-                .right_margin   = 40,
-                .upper_margin   = 21,
-                .lower_margin   = 7,
-                .hsync_len      = 60,
-                .vsync_len      = 10,
-                .sync           = FB_SYNC_EXT,
-                .vmode          = FB_VMODE_NONINTERLACED
+                .left_margin    = 80,
+                .right_margin   = 80,
+                .upper_margin   = 13,
+                .lower_margin   = 13,
+                .hsync_len      = 80,
+                .vsync_len      = 14,
         }
 	},
   {
@@ -632,7 +630,7 @@ void ft_board_setup(void *blob, bd_t *bd) {
       //find the frame buffer node
       int offset = fdt_path_offset(fdt_location, "/fb@0");
 
-      // adjust from RGB24 to RGB18
+      // adjust from RGB24 to LVDS666 
       int propres = fdt_setprop_string(fdt_location, offset,
                                           "interface_pix_fmt", "LVDS666");
       // check result
@@ -669,7 +667,9 @@ int board_video_skip(void)
 		}
 		if (!panel) {
 			panel = displays[0].mode.name;
-			printf("No panel detected: default to %s\n", panel);
+            int fourcc = displays[0].pixfmt;
+			printf("No panel detected: default to %s with pixel format 0x%x\n", 
+                    panel, fourcc);
 			i = 0;
 		}
 	} else {
