@@ -1,6 +1,6 @@
 # Quick little script to build the TAB series bootloader
 ARCH=arm
-CROSS_COMPILE=../../../prebuilts/gcc/linux-x86/arm/arm-eabi-4.6/bin/arm-eabi-
+CROSS_COMPILE=../../../prebuilts/gcc/linux-x86/arm/arm-eabi-4.8/bin/arm-eabi-
 THREADS=8
 
 make -j$THREADS distclean ARCH=$ARCH CROSS_COMPILE=$CROSS_COMPILE
