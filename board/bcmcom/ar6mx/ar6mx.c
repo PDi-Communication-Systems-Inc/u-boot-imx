@@ -493,7 +493,8 @@ static void setup_gpios(void)
            gpio_direction_input(AR6MX_AIO_VOL_DOWN);
         }    
 
-	gpio_direction_output(AR6MX_ANDROID_PWRSTATE, 1);
+	gpio_direction_output(AR6MX_ANDROID_PWRSTATE, 0);
+        printf("Made this change to control TV Vol leakage on reboots\n-MG");
         gpio_direction_output(AR6MX_INTERNAL_SPK_ENABLE, 0);
 
         imx_iomux_v3_setup_multiple_pads(
