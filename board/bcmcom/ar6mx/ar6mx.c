@@ -493,7 +493,7 @@ static void setup_gpios(void)
            gpio_direction_input(AR6MX_AIO_VOL_DOWN);
         }    
 
-        printf("Setting power state GPIO output low.");
+        printf("Setting power state GPIO output low.\n");
         gpio_direction_output(AR6MX_ANDROID_PWRSTATE, 0);  // Made this change to control TV Vol leakage on reboots -MG
         gpio_direction_output(AR6MX_INTERNAL_SPK_ENABLE, 0);
 
@@ -559,7 +559,7 @@ static struct display_info_t const displays[] = {
                 .refresh        = 60,
                 .xres           = 1366,
                 .yres           = 768,
-                .pixclock       = 12844,
+                .pixclock       = 12844,  // 12844ps = 10^12 / ( (1366+80+80+80)*(768+13+13+14)*60 )
                 .left_margin    = 80,
                 .right_margin   = 80,
                 .upper_margin   = 13,
