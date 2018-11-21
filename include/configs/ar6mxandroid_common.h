@@ -104,9 +104,11 @@
         "bootargs=console=ttymxc0,115200\0"     \
         "bootargs_base=setenv bootargs console=ttymxc0,115200 "\
                 "vmalloc=400M androidboot.console=ttymxc0 "\
-        "ldb_di_clk_sel=pll5_video_div "\
+                "ldb_di_clk_sel=pll5_video_div "\
                 "androidboot.hardware=freescale "\
-                "video=mxcfb0:bpp=32\0"
+                "video=mxcfb0:bpp=32 "\
+                "androidboot.selinux=disabled "\
+                "androidboot.dm_verity=disabled\0"
 
 
 #endif /* AR6MX_ANDROID_COMMON_H */
